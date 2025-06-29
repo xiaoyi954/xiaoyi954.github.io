@@ -1,270 +1,167 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  
-  
-  <title>Hexo</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Hexo">
-<meta property="og:url" content="http://example.com/index.html">
-<meta property="og:site_name" content="Hexo">
-<meta property="og:locale" content="en_US">
-<meta property="article:author" content="John Doe">
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>小易同志 - 个人博客</title><meta name="author" content="小易同志"><meta name="copyright" content="小易同志"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="技术上的一些碎碎念">
+<meta property="og:type" content="website">
+<meta property="og:title" content="小易同志">
+<meta property="og:url" content="http://xiaoyi954.github.io/index.html">
+<meta property="og:site_name" content="小易同志">
+<meta property="og:description" content="技术上的一些碎碎念">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://xiaoyi954.github.io/img/butterfly-icon.png">
+<meta property="article:author" content="小易同志">
+<meta property="article:tag" content="宁夏理工">
+<meta property="article:tag" content="教务">
+<meta property="article:tag" content="抢课">
+<meta property="article:tag" content="优化">
 <meta name="twitter:card" content="summary">
-  
-    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
-  
-  
-    <link rel="shortcut icon" href="/favicon.png">
-  
-  
-  
-<link rel="stylesheet" href="/css/style.css">
+<meta name="twitter:image" content="http://xiaoyi954.github.io/img/butterfly-icon.png"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://xiaoyi954.github.io/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
 
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
   
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
     
-<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
-
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
   
-  
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fork-awesome@1.2.0/css/fork-awesome.min.css">
-
-<meta name="generator" content="Hexo 7.3.0"></head>
-
-<body>
-  <div id="container">
-    <div id="wrap">
-      <header id="header">
-  <div id="banner"></div>
-  <div id="header-outer" class="outer">
-    <div id="header-title" class="inner">
-      <h1 id="logo-wrap">
-        <a href="/" id="logo">Hexo</a>
-      </h1>
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '小易同志',
+  isHighlightShrink: false,
+  isToc: false,
+  pageType: 'home'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="page" id="body-wrap"><header class="full_page" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">小易同志</span></a></span><div id="menus"></div></nav><div id="site-info"><h1 id="site-title">小易同志</h1></div><div id="scroll-down"><i class="fas fa-angle-down scroll-down-effects"></i></div></header><main class="layout" id="content-inner"><div class="recent-posts nc" id="recent-posts"><div class="recent-post-items"><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/2025/06/29/%E5%AE%81%E5%A4%8F%E7%90%86%E5%B7%A5%E6%95%99%E5%8A%A1%E7%B3%BB%E7%BB%9F%E5%BF%AB%E9%80%9F%E6%8A%A2%E8%AF%BE%E6%96%B9%E6%A1%88/" title="宁夏理工教务系统快速抢课方案">宁夏理工教务系统快速抢课方案</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2025-06-29T09:09:45.926Z" title="发表于 2025-06-29 17:09:45">2025-06-29</time></span></div><div class="content">宁夏理工学院教务系统内网登录辅助程序 小易教务 V3.1 使用说明 作者：小易同学联系方式：xytx954@126.com发布日期：2024年12月 如果你懒得看下面的博文可发邮件联系博主付费代抢，小易团队代抢课4年，每次限量预约200名左右，曾创下把65人全塞进两个羽毛球班的壮举，直接班里一半的人全是我们抢上的。 一、项目简介 小易教务 V3.1 是一款专为宁夏理工学院教务系统设计的内网登录辅助工具，旨在解决学生因公网延迟或访问受限而导致无法顺利登录教务系统的问题。该工具已在 2024 年 12 月 23 日与 25 日的实际抢课测试中成功帮助约 300 名学生顺利完成选课操作，验证了其实用性与稳定性。 二、项目原理 本程序主要通过模拟统一门户登录，抓取认证后产生的 Cookie，进而利用该 Cookie 自动登录教务系统内网（10.100.100.141），实现免手动输入、快速稳定的预登录过程。整个流程可总结为一句话：“认证一次，用 Cookie...</div></div></div></div><nav id="pagination"><div class="pagination"><span class="page-number current">1</span></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/butterfly-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">小易同志</div><div class="author-info-description">技术上的一些碎碎念</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">1</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/06/29/%E5%AE%81%E5%A4%8F%E7%90%86%E5%B7%A5%E6%95%99%E5%8A%A1%E7%B3%BB%E7%BB%9F%E5%BF%AB%E9%80%9F%E6%8A%A2%E8%AF%BE%E6%96%B9%E6%A1%88/" title="宁夏理工教务系统快速抢课方案">宁夏理工教务系统快速抢课方案</a><time datetime="2025-06-29T09:09:45.926Z" title="发表于 2025-06-29 17:09:45">2025-06-29</time></div></div></div></div><div class="card-widget card-archives">
+    <div class="item-headline">
+      <i class="fas fa-archive"></i>
+      <span>归档</span>
       
     </div>
-    <div id="header-inner" class="inner">
-      <nav id="main-nav">
-        <a id="main-nav-toggle" class="nav-icon"><span class="fa fa-bars"></span></a>
-        
-          <a class="main-nav-link" href="/">Home</a>
-        
-          <a class="main-nav-link" href="/archives">Archives</a>
-        
-      </nav>
-      <nav id="sub-nav">
-        
-        
-          <a class="nav-icon" href="/atom.xml" title="RSS Feed"><span class="fa fa-rss"></span></a>
-        
-        <a class="nav-icon nav-search-btn" title="Search"><span class="fa fa-search"></span></a>
-      </nav>
-      <div id="search-form-wrap">
-        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
-      </div>
-    </div>
-  </div>
-</header>
-
-      <div class="outer">
-        <section id="main">
   
-    <article id="post-宁夏理工教务系统快速抢课方案" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2025/06/29/%E5%AE%81%E5%A4%8F%E7%90%86%E5%B7%A5%E6%95%99%E5%8A%A1%E7%B3%BB%E7%BB%9F%E5%BF%AB%E9%80%9F%E6%8A%A2%E8%AF%BE%E6%96%B9%E6%A1%88/" class="article-date">
-  <time class="dt-published" datetime="2025-06-29T09:09:45.926Z" itemprop="datePublished">2025-06-29</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2025/06/29/%E5%AE%81%E5%A4%8F%E7%90%86%E5%B7%A5%E6%95%99%E5%8A%A1%E7%B3%BB%E7%BB%9F%E5%BF%AB%E9%80%9F%E6%8A%A2%E8%AF%BE%E6%96%B9%E6%A1%88/">宁夏理工教务系统快速抢课方案</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
+    <ul class="card-archive-list">
       
-        <p><strong>宁夏理工学院教务系统内网登录辅助程序</strong></p>
-<p><strong>小易教务 V3.1 使用说明</strong></p>
-<p><strong>作者：小易同学</strong><br><strong>联系方式：</strong><a href="mailto:&#120;&#x79;&#x74;&#120;&#x39;&#53;&#x34;&#64;&#49;&#50;&#x36;&#x2e;&#99;&#111;&#109;"><strong>xytx954@126.com</strong></a><br><strong>发布日期：2024年12月</strong></p>
-<p><strong>如果你懒得看下面的博文可发邮件联系博主付费代抢，小易团队代抢课4年，每次限量预约200名左右，曾创下把65人全塞进两个羽毛球班的壮举，直接班里一半的人全是我们抢上的。</strong></p>
-<p><strong>一、项目简介</strong></p>
-<p><strong>小易教务 V3.1</strong> 是一款专为宁夏理工学院教务系统设计的内网登录辅助工具，旨在解决学生因公网延迟或访问受限而导致无法顺利登录教务系统的问题。<br>该工具已在 2024 年 12 月 23 日与 25 日的实际抢课测试中成功帮助约 300 名学生顺利完成选课操作，验证了其实用性与稳定性。</p>
-<p><strong>二、项目原理</strong></p>
-<p>本程序主要通过模拟统一门户登录，抓取认证后产生的 Cookie，进而利用该 Cookie 自动登录教务系统内网（10.100.100.141），实现免手动输入、快速稳定的预登录过程。<br>整个流程可总结为一句话：<strong>“认证一次，用 Cookie 直接打通内网教务系统。”</strong></p>
-<p>当前版本虽已可用，但仍存在已知问题，作者由于学业繁忙暂无精力持续优化，特此开源供感兴趣者参考或继续开发。</p>
-<p><strong>三、安装说明</strong></p>
-<p><strong>1. 下载程序</strong></p>
-<p>请通过《EXE文件下载链接.txt》中提供的阿里云盘地址获取安装包：<br>🔗 <a target="_blank" rel="noopener" href="https://www.alipan.com/s/7XFe4rkZ1uZ">https://www.alipan.com/s/7XFe4rkZ1uZ</a></p>
-<p>建议下载“按钮”版本。</p>
-<p>这是公开版。关闭了浏览器多开，多开的版本不会公开，不然到时候会一个人抢好几十个账户，会验证扰乱公平性。</p>
-<p>网盘无法运行，可使用源代码方式手动运行 main.py。（main.py我已经好久没更新了，估计有点悬。）</p>
-<p>下载解压后运行就OK了，启动器路径：<br>&#x2F;软件数据&#x2F;dist&#x2F;nxist_login&#x2F;小易教务V3.1exe</p>
-<p>或者:</p>
-<p>&#x2F;dist&#x2F;nxist_login&#x2F;NxistjwLogin.exe</p>
-<p>(学业繁忙来不及打包成一键安装包，担待担待。)</p>
-<p><strong>2. 源码运行方法（高级用户）</strong></p>
-<p><strong>依赖环境要求：</strong><br>请确保已安装以下环境与依赖：</p>
-<ul>
-<li>Python 3.7+</li>
-<li>Google Chrome 浏览器</li>
-<li>pip 安装如下模块：</li>
-<li>pip install psutil selenium</li>
-<li>main.py文件地址：<a target="_blank" rel="noopener" href="https://github.com/xiaoyi954/NXIST-JIAOWU">xiaoyi954&#x2F;NXIST-JIAOWU: 宁夏理工教务系统内网cookie登录–一个实现通过统一门户登录到内网教务系统的项目。</a><br>  <br/>什么？！你说你打不开github?那说明你不是大佬，直接装网盘里的吧。</li>
-</ul>
-<p><strong>运行步骤：</strong></p>
-<ol>
-<li>将 main.py 解压至任意路径；</li>
-<li>在文件夹内空白处 <strong>右键 → 终端&#x2F;命令行窗口</strong>；</li>
-<li>输入以下命令启动程序：</li>
-<li>python main.py</li>
-</ol>
-<p><strong>四、使用说明</strong></p>
-<p><strong>1. 环境准备</strong></p>
-<ul>
-<li>确保当前网络环境可接入校园网。</li>
-</ul>
-<p><strong>2. 操作流程</strong></p>
-<ul>
-<li>抢课开始前 <strong>提前 1 小时</strong> 启动程序；</li>
-<li>在跳转至“统一身份认证”页面后输入账号密码；</li>
-<li>登录成功后，浏览器标题栏提示“你可以操作了，欢迎使用小易…”即表示已预登录成功；</li>
-<li>此时请勿关闭浏览器和终端窗口，程序将维持登录状态；</li>
-<li>每隔 30 分钟检查一次页面状态，确认是否仍在内网地址（10.100.100.141）且未掉线；</li>
-<li>抢课开始后和正常流程一样，只是不卡了而已。</li>
-<li>注意有时候校园网会在抢课开始时禁止访问教务系统，这个时候你需要使用第三方工具将portal.nxist.com代理成外省ip访问才行。也就是可能会出现平时这个软件可以用，抢课时不可以用。针对于这种情况我也做了个解决这个问题的版本，也就是“按钮”版本。以下是按钮版本的使用方法：</li>
-<li>电脑先连接手机热点！！！电脑先连接手机热点！！！电脑先连接手机热点！！！</li>
-</ul>
-<p>（因为你校园网访问教务都被学校禁止了，你只能先用热点进。）</p>
-<ul>
-<li><p>与上面的操作流程一样，只不过在跳出弹窗后你需要把电脑的网切换成校园网。</p>
-</li>
-<li><p>切换成校园后点击“进内网”就可以了。然后等待抢课开始后就行了。</p>
-</li>
-</ul>
-<p>“按钮”版本好像可以多开，我找不到单开的版本了，哎呀不管了，反正我毕业了，抢课市场因为这个软件乱就乱吧。</p>
-<p>⚠️ 本工具仅支持<strong>抢课前预登录</strong>，<strong>不支持在选课开始后重新登录</strong>。</p>
-<p>抢课开始后还可以流程登录和抢课的软件我是真不敢拿出来。有兴趣的同学自己研究研究吧。</p>
-<p><strong>五、进阶提示（开发者参考）</strong></p>
-<p>为实现<strong>选课开始后仍可持续登录内网</strong>，以下是后续开发建议与技术思路：</p>
-<ol>
-<li><strong>修改统一门户重定向规则</strong><br>替换门户登录页面中的 JS 重定向逻辑，使其指向内网地址；</li>
-<li><strong>绕过门户，直接获取教育网 Cookie</strong><br>从 cas.nist.edu.cn 或 myst.nist.edu.cn 抓取 Cookie 而非通过 portal.nxist.com，该方法需较高的 Web 后端技术；</li>
-<li><strong>理解各节点网络拓扑结构</strong><br>深入分析 10.100.100.141 教务系统各端口及其与门户系统之间的关联机制；</li>
-<li><strong>Cookie 标识参考</strong><br>已知可用的 route 值为：</li>
-<li>adef3cfba742b03d8aed0b1f92f60144</li>
-<li><strong>网络策略补充说明</strong><br>实际抢课过程中常出现公网（尤其是电信）严重拥堵，而教育网和校园内网稳定通畅；<br>若可实现通过教育网登录至内网，将极大提升成功率。</li>
-</ol>
-<p><strong>六、免责声明</strong></p>
-<p>本程序仅供学习与研究使用，所有操作请遵守相关网络与校内规定。<br>开发者不对使用本程序过程中造成的任何问题承担责任。</p>
-<p><strong>七、鸣谢</strong></p>
-<p>感谢宁夏理工学院电信学院同学们在测试阶段的积极配合与反馈支持。</p>
-<p>如需反馈问题或提出建议，请联系邮箱：<a href="mailto:&#x78;&#121;&#x74;&#x78;&#x39;&#53;&#x34;&#x40;&#x31;&#50;&#54;&#46;&#x63;&#111;&#109;"><strong>xytx954@126.com</strong></a><br>欢迎各位开发者基于此项目继续完善优化！</p>
-
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2025/06/">
+            <span class="card-archive-list-date">
+              六月 2025
+            </span>
+            <span class="card-archive-list-count">1</span>
+          </a>
+        </li>
       
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://example.com/2025/06/29/%E5%AE%81%E5%A4%8F%E7%90%86%E5%B7%A5%E6%95%99%E5%8A%A1%E7%B3%BB%E7%BB%9F%E5%BF%AB%E9%80%9F%E6%8A%A2%E8%AF%BE%E6%96%B9%E6%A1%88/" data-id="cmchk4emk000078v8e8s20gyl" data-title="宁夏理工教务系统快速抢课方案" class="article-share-link"><span class="fa fa-share">Share</span></a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
-
-
-</section>
-        
-          <aside id="sidebar">
-  
-    
-
-  
-    
-
-  
-    
-  
-    
-  <div class="widget-wrap">
-    <h3 class="widget-title">Archives</h3>
-    <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/06/">June 2025</a></li></ul>
-    </div>
-  </div>
-
-
-  
-    
-  <div class="widget-wrap">
-    <h3 class="widget-title">Recent Posts</h3>
-    <div class="widget">
-      <ul>
-        
-          <li>
-            <a href="/2025/06/29/%E5%AE%81%E5%A4%8F%E7%90%86%E5%B7%A5%E6%95%99%E5%8A%A1%E7%B3%BB%E7%BB%9F%E5%BF%AB%E9%80%9F%E6%8A%A2%E8%AF%BE%E6%96%B9%E6%A1%88/">宁夏理工教务系统快速抢课方案</a>
-          </li>
-        
-      </ul>
-    </div>
-  </div>
-
-  
-</aside>
-        
-      </div>
-      <footer id="footer">
-  
-  <div class="outer">
-    <div id="footer-info" class="inner">
-      
-      &copy; 2025 John Doe<br>
-      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
-    </div>
-  </div>
-</footer>
-
-    </div>
-    <nav id="mobile-nav">
-  
-    <a href="/" class="mobile-nav-link">Home</a>
-  
-    <a href="/archives" class="mobile-nav-link">Archives</a>
-  
-</nav>
-    
-
-
-<script src="/js/jquery-3.6.4.min.js"></script>
-
-
-
-  
-<script src="/fancybox/jquery.fancybox.min.js"></script>
-
-
-
-
-<script src="/js/script.js"></script>
-
-
-
-
-
-  </div>
-</body>
-</html>
+    </ul>
+  </div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>网站信息</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">文章数目 :</div><div class="item-count">1</div></div><div class="webinfo-item"><div class="item-name">本站访客数 :</div><div class="item-count" id="busuanzi_value_site_uv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">本站总浏览量 :</div><div class="item-count" id="busuanzi_value_site_pv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">最后更新时间 :</div><div class="item-count" id="last-push-date" data-lastPushDate="2025-06-29T11:31:43.034Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2019 - 2025 By 小易同志</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.3.5</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
