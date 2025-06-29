@@ -1,0 +1,405 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>宁夏理工学院校园网自动化登录方案 | 小易同志 个人博客</title><meta name="author" content="小易同志"><meta name="copyright" content="小易同志"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="《宁夏理工学院免费校园网自动化登录方案：OpenWrt 与 Shell 脚本实现》一、方案背景与目标宁夏理工学院校园网采用网页认证机制，传统手动登录方式存在操作繁琐、账号限制（如同时在线设备数）、网络断连后需重新认证等问题。本方案通过 OpenWrt 路由器系统结合定制 Shell 脚本，实现：  全自动认证：无需人工干预，路由器周期性检测并完成网络登录 多账号轮询：维护账号池并随机选择账号，避免">
+<meta property="og:type" content="article">
+<meta property="og:title" content="宁夏理工学院校园网自动化登录方案">
+<meta property="og:url" content="http://xiaoyi954.github.io/2025/06/29/%E5%AE%81%E5%A4%8F%E7%90%86%E5%B7%A5%E5%AD%A6%E9%99%A2%E6%A0%A1%E5%9B%AD%E7%BD%91%E8%87%AA%E5%8A%A8%E5%8C%96%E7%99%BB%E5%BD%95%E6%96%B9%E6%A1%88/index.html">
+<meta property="og:site_name" content="小易同志 个人博客">
+<meta property="og:description" content="《宁夏理工学院免费校园网自动化登录方案：OpenWrt 与 Shell 脚本实现》一、方案背景与目标宁夏理工学院校园网采用网页认证机制，传统手动登录方式存在操作繁琐、账号限制（如同时在线设备数）、网络断连后需重新认证等问题。本方案通过 OpenWrt 路由器系统结合定制 Shell 脚本，实现：  全自动认证：无需人工干预，路由器周期性检测并完成网络登录 多账号轮询：维护账号池并随机选择账号，避免">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://xiaoyi954.github.io/img/1.jpg">
+<meta property="article:published_time" content="2025-06-29T13:37:37.000Z">
+<meta property="article:modified_time" content="2025-06-29T13:38:45.564Z">
+<meta property="article:author" content="小易同志">
+<meta property="article:tag" content="宁夏理工">
+<meta property="article:tag" content="教务">
+<meta property="article:tag" content="抢课">
+<meta property="article:tag" content="优化">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://xiaoyi954.github.io/img/1.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "宁夏理工学院校园网自动化登录方案",
+  "url": "http://xiaoyi954.github.io/2025/06/29/%E5%AE%81%E5%A4%8F%E7%90%86%E5%B7%A5%E5%AD%A6%E9%99%A2%E6%A0%A1%E5%9B%AD%E7%BD%91%E8%87%AA%E5%8A%A8%E5%8C%96%E7%99%BB%E5%BD%95%E6%96%B9%E6%A1%88/",
+  "image": "http://xiaoyi954.github.io/img/1.jpg",
+  "datePublished": "2025-06-29T13:37:37.000Z",
+  "dateModified": "2025-06-29T13:38:45.564Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "小易同志",
+      "url": "http://xiaoyi954.github.io/"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://xiaoyi954.github.io/2025/06/29/%E5%AE%81%E5%A4%8F%E7%90%86%E5%B7%A5%E5%AD%A6%E9%99%A2%E6%A0%A1%E5%9B%AD%E7%BD%91%E8%87%AA%E5%8A%A8%E5%8C%96%E7%99%BB%E5%BD%95%E6%96%B9%E6%A1%88/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '宁夏理工学院校园网自动化登录方案',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg" style="background-image: url(/img/2.png);"></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/2.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">小易同志 个人博客</span></a><a class="nav-page-title" href="/"><span class="site-name">宁夏理工学院校园网自动化登录方案</span></a></span><div id="menus"></div></nav><div id="post-info"><h1 class="post-title">宁夏理工学院校园网自动化登录方案</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-06-29T13:37:37.000Z" title="发表于 2025-06-29 21:37:37">2025-06-29</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-06-29T13:38:45.564Z" title="更新于 2025-06-29 21:38:45">2025-06-29</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="《宁夏理工学院免费校园网自动化登录方案：OpenWrt-与-Shell-脚本实现》"><a href="#《宁夏理工学院免费校园网自动化登录方案：OpenWrt-与-Shell-脚本实现》" class="headerlink" title="《宁夏理工学院免费校园网自动化登录方案：OpenWrt 与 Shell 脚本实现》"></a>《宁夏理工学院免费校园网自动化登录方案：OpenWrt 与 Shell 脚本实现》</h1><h2 id="一、方案背景与目标"><a href="#一、方案背景与目标" class="headerlink" title="一、方案背景与目标"></a>一、方案背景与目标</h2><p>宁夏理工学院校园网采用网页认证机制，传统手动登录方式存在操作繁琐、账号限制（如同时在线设备数）、网络断连后需重新认证等问题。本方案通过 OpenWrt 路由器系统结合定制 Shell 脚本，实现：</p>
+<ol>
+<li><strong>全自动认证</strong>：无需人工干预，路由器周期性检测并完成网络登录</li>
+<li><strong>多账号轮询</strong>：维护账号池并随机选择账号，避免单一账号频繁登录被限制</li>
+<li><strong>智能重连机制</strong>：网络断开时自动重试，结合网络接口切换提升连接成功率</li>
+<li><strong>实时状态监控</strong>：通过日志记录与邮件通知，实时反馈网络状态</li>
+</ol>
+<h2 id="二、核心脚本原理与源码解析"><a href="#二、核心脚本原理与源码解析" class="headerlink" title="二、核心脚本原理与源码解析"></a>二、核心脚本原理与源码解析</h2><h3 id="1-脚本整体架构"><a href="#1-脚本整体架构" class="headerlink" title="1. 脚本整体架构"></a>1. 脚本整体架构</h3><p>脚本采用模块化设计，包含锁机制、账号管理、网络检测、认证请求、异常处理五大核心模块，确保在 OpenWrt 环境下稳定运行。以下是完整源码：</p>
+<pre><code>#!/bin/sh
+
+LOCK_FILE=&quot;/root/auto_login.lock&quot;
+exec 200&gt;&quot;$LOCK_FILE&quot;
+flock -n 200 || &#123; echo &quot;$(date &#39;+%F %T&#39;) - Another instance is running, exiting.&quot;; exit 1; &#125;
+trap &#39;flock -u 200; rm -f &quot;$LOCK_FILE&quot;; exit&#39; INT TERM EXIT
+
+STATE_FILE=&quot;/root/login_fail_count&quot;
+HELP_FILE=&quot;/root/help_count&quot;
+pwd=123@nxlg
+wlanuserip=自己抓包，或者分析登录url。
+nasip=75cb4c6151c4e913d1c9375edbb47482
+login_url=&quot;http://192.168.252.3:9090/zportal/login/do&quot;
+user_file=&quot;/root/userlist.txt&quot;
+log_file=&quot;/root/login.log&quot;
+eth0_ip=&quot;10.21.51.183&quot;
+eth0_gw=&quot;你的ip&quot;
+
+if [ ! -f &quot;$user_file&quot; ] || [ $(wc -l &lt; &quot;$user_file&quot;) -lt 3 ]; then
+    cat &gt; &quot;$user_file&quot; &lt;&lt;EOF
+125440030
+省略账户。。。。。自己抓包抓可用的。
+EOF
+fi
+
+user_count=$(wc -l &lt; &quot;$user_file&quot;)
+rand_index=$(head -c 2 /dev/urandom | hexdump -e &#39;&quot;%u&quot;&#39; | awk -v max=&quot;$user_count&quot; &#39;&#123;print ($1 % max) + 1&#125;&#39;)
+user=$(sed -n &quot;$&#123;rand_index&#125;p&quot; &quot;$user_file&quot;)
+
+if [ -z &quot;$user&quot; ]; then
+    exit 1
+fi
+
+current_time=$(date &quot;+%Y-%m-%d %H:%M:%S&quot;)
+max_attempts=1
+attempt=0
+
+while [ $attempt -lt $max_attempts ]; do
+    if ping -I eth0 -c 1 -W 1 10.100.100.141 &gt; /dev/null 2&gt;&amp;1; then
+        echo &quot;$current_time - $user - Internet OK&quot; &gt; temp_log.txt
+        cat &quot;$log_file&quot; &gt;&gt; temp_log.txt 2&gt;/dev/null
+        mv temp_log.txt &quot;$log_file&quot;
+        break
+    else
+        ip route replace 192.168.252.3/32 dev eth0
+        ip rule add from 10.21.18.5 table 100
+        ip route add default via 10.21.255.254 dev eth0 table 100
+        ip rule add from 10.21.51.183 table 100
+        ip route replace 10.100.100.141/32 dev eth0
+        ip route replace 192.168.252.3/32 via $eth0_gw dev eth0 onlink
+
+        response=$(curl -s --interface $eth0_ip --connect-timeout 5 --max-time 10 -d &quot;username=$user&amp;pwd=$pwd&amp;validCodeFlag=false&amp;wlanuserip=$wlanuserip&amp;nasip=$nasip&quot; &quot;$login_url&quot;)
+        result=$(echo &quot;$response&quot; | grep -o &#39;&quot;result&quot;:&quot;[^&quot;]*&quot;&#39; | cut -d &#39;&quot;&#39; -f4)
+        fail_count=$(cat &quot;$STATE_FILE&quot; 2&gt;/dev/null || echo 0)
+        help_count=$(cat &quot;$HELP_FILE&quot; 2&gt;/dev/null || echo 0)
+
+        if [ &quot;$result&quot; = &quot;success&quot; ] || [ &quot;$result&quot; = &quot;online&quot; ] || [ &quot;$result&quot; = &quot;Online&quot; ]; then
+            echo &quot;$current_time - $user - Login successful&quot; &gt; temp_log.txt
+            cat &quot;$log_file&quot; &gt;&gt; temp_log.txt 2&gt;/dev/null
+            mv temp_log.txt &quot;$log_file&quot;
+            fail_count=0
+            help_count=0
+            echo &quot;$fail_count&quot; &gt; &quot;$STATE_FILE&quot;
+            echo &quot;$help_count&quot; &gt; &quot;$HELP_FILE&quot;
+            echo -e &quot;Subject: wan      -Login success
+
+GLinet-MT3000:
+eth0     ߺ  Զ   ¼ ɹ   &quot; | msmtp xytx954@126.com || true
+            break
+        else
+            /root/mail1.sh
+            echo &quot;$current_time - $user - Login failed: $response&quot; &gt; temp_log.txt
+            cat &quot;$log_file&quot; &gt;&gt; temp_log.txt 2&gt;/dev/null
+            mv temp_log.txt &quot;$log_file&quot;
+            grep -v &quot;^$user\$&quot; &quot;$user_file&quot; &gt; &quot;$&#123;user_file&#125;.tmp&quot; &amp;&amp; mv &quot;$&#123;user_file&#125;.tmp&quot; &quot;$user_file&quot;
+            fail_count=$((fail_count + 1))
+            echo &quot;$fail_count&quot; &gt; &quot;$STATE_FILE&quot;
+
+            if [ &quot;$fail_count&quot; -ge 10 ] &amp;&amp; [ &quot;$help_count&quot; -lt 3 ]; then
+                ip link set eth2 down
+                ip link set eth0 up
+                response=$(curl -s --interface $eth0_ip --connect-timeout 5 --max-time 10 -d &quot;username=$user&amp;pwd=$pwd&amp;validCodeFlag=false&amp;wlanuserip=$wlanuserip&amp;nasip=$nasip&quot; &quot;$login_url&quot;)
+                result=$(echo &quot;$response&quot; | grep -o &#39;&quot;result&quot;:&quot;[^&quot;]*&quot;&#39; | cut -d &#39;&quot;&#39; -f4)
+                echo &quot;$current_time - $user - !!!!!!!!Enable only the eth0 port to save!!!!!!!!&quot; &gt; temp_log.txt
+                cat &quot;$log_file&quot; &gt;&gt; temp_log.txt 2&gt;/dev/null
+                mv temp_log.txt &quot;$log_file&quot;
+                help_count=$((help_count + 1))
+                echo &quot;$help_count&quot; &gt; &quot;$HELP_FILE&quot;
+                ip link set eth2 up
+                ip link set eth0 up
+                if [ &quot;$result&quot; = &quot;success&quot; ] || [ &quot;$result&quot; = &quot;online&quot; ] || [ &quot;$result&quot; = &quot;Online&quot; ]; then
+                    echo &quot;$current_time - $user - Login successful&quot; &gt; temp_log.txt
+                    cat &quot;$log_file&quot; &gt;&gt; temp_log.txt 2&gt;/dev/null
+                    mv temp_log.txt &quot;$log_file&quot;
+                    fail_count=0
+                    help_count=0
+                    echo &quot;$fail_count&quot; &gt; &quot;$STATE_FILE&quot;
+                    echo &quot;$help_count&quot; &gt; &quot;$HELP_FILE&quot;
+                    /root/mail2.sh
+                    break
+                else
+                    /root/mail3.sh
+                fi
+            fi
+        fi
+        attempt=$((attempt + 1))
+    fi
+done
+
+if [ $attempt -ge $max_attempts ]; then
+    echo &quot;$current_time - $user - Failed to connect to the Internet after $max_attempts attempts.&quot; &gt; temp_log.txt
+    cat &quot;$log_file&quot; &gt;&gt; temp_log.txt 2&gt;/dev/null
+    mv temp_log.txt &quot;$log_file&quot;
+fi
+
+curl -X POST -H &quot;X-Auth-Key: 954959@Yjh&quot; --data-binary &quot;@/root/login.log&quot; https://换成你的后端.com
+
+flock -u 200
+rm -f &quot;$LOCK_FILE&quot;
+exit 0
+</code></pre>
+<h3 id="2-关键模块详解"><a href="#2-关键模块详解" class="headerlink" title="2. 关键模块详解"></a>2. 关键模块详解</h3><h4 id="（1）锁机制与单例控制"><a href="#（1）锁机制与单例控制" class="headerlink" title="（1）锁机制与单例控制"></a>（1）锁机制与单例控制</h4><p>通过flock命令实现文件锁，确保脚本同一时间仅运行一个实例，避免多进程同时操作网络接口导致冲突。陷阱机制trap确保脚本异常退出时释放锁，防止锁文件残留。</p>
+<h4 id="（2）账号随机选择算法"><a href="#（2）账号随机选择算法" class="headerlink" title="（2）账号随机选择算法"></a>（2）账号随机选择算法</h4><p>利用&#x2F;dev&#x2F;urandom生成随机数，结合sed从账号池中随机选取账号，实现账号轮询，均衡使用不同账号以规避校园网登录限制。账号池默认包含 50 + 个学号，支持自动初始化。</p>
+<h4 id="（3）网络状态检测与路由配置"><a href="#（3）网络状态检测与路由配置" class="headerlink" title="（3）网络状态检测与路由配置"></a>（3）网络状态检测与路由配置</h4><p>通过ping命令检测网络连通性，断连时通过ip route和ip rule重新配置路由表，确保网络接口指向认证服务器，为后续认证请求建立网络通路。</p>
+<h4 id="（4）智能异常处理机制"><a href="#（4）智能异常处理机制" class="headerlink" title="（4）智能异常处理机制"></a>（4）智能异常处理机制</h4><ol>
+<li><strong>失败计数</strong>：记录单个账号连续失败次数，超过 10 次时触发接口切换（关闭 eth2、仅启用 eth0），改变网络环境后重试</li>
+<li><strong>多级通知</strong>：根据登录结果发送不同类型邮件（成功 &#x2F; 失败 &#x2F; 紧急修复），便于管理员实时监控</li>
+<li><strong>账号剔除</strong>：登录失败的账号自动从账号池中移除，避免重复尝试无效账号</li>
+</ol>
+<h2 id="三、OpenWrt-部署与配置指南"><a href="#三、OpenWrt-部署与配置指南" class="headerlink" title="三、OpenWrt 部署与配置指南"></a>三、OpenWrt 部署与配置指南</h2><h3 id="1-环境准备"><a href="#1-环境准备" class="headerlink" title="1. 环境准备"></a>1. 环境准备</h3><ol>
+<li><strong>硬件要求</strong>：<ol>
+<li>支持 OpenWrt 的路由器（推荐 GLinet MT3000、TP-Link WR703N 等）</li>
+<li>校园网物理连接（ETH0 接口用于连接校园网，ETH2 用于内网共享）</li>
+</ol>
+</li>
+<li><strong>软件依赖</strong>：</li>
+</ol>
+<p>opkg update</p>
+<p>opkg install curl msmtp # 安装网络请求与邮件工具</p>
+<h3 id="2-脚本部署步骤"><a href="#2-脚本部署步骤" class="headerlink" title="2. 脚本部署步骤"></a>2. 脚本部署步骤</h3><h4 id="（1）创建并配置脚本"><a href="#（1）创建并配置脚本" class="headerlink" title="（1）创建并配置脚本"></a>（1）创建并配置脚本</h4><p># 创建脚本文件</p>
+<p>vi &#x2F;root&#x2F;auto_login.sh</p>
+<p># 粘贴完整源码（见上文），修改以下参数：</p>
+<p># - user_file：账号文件路径</p>
+<p># - eth0_ip&#x2F;eth0_gw：根据校园网分配的IP修改</p>
+<p># - login_url：认证接口（宁夏理工学院为<a target="_blank" rel="noopener" href="http://192.168.252.3:9090/zportal/login/do%EF%BC%89">http://192.168.252.3:9090/zportal/login/do）</a></p>
+<p># - 邮件通知地址（<a href="mailto:&#120;&#x79;&#x74;&#120;&#x39;&#x35;&#52;&#x40;&#x31;&#x32;&#54;&#46;&#x63;&#111;&#109;">xytx954@126.com</a>替换为实际邮箱）</p>
+<p># 赋予执行权限</p>
+<p>chmod +x &#x2F;root&#x2F;auto_login.sh</p>
+<h4 id="（2）配置定时任务"><a href="#（2）配置定时任务" class="headerlink" title="（2）配置定时任务"></a>（2）配置定时任务</h4><p>crontab -e # 编辑定时任务</p>
+<p># 添加以下行（每分钟执行一次）</p>
+<p>* * * * * &#x2F;root&#x2F;auto_login.sh &gt; &#x2F;dev&#x2F;null 2&gt;&amp;1</p>
+<h4 id="（3）邮件通知配置"><a href="#（3）邮件通知配置" class="headerlink" title="（3）邮件通知配置"></a>（3）邮件通知配置</h4><p>vi &#x2F;etc&#x2F;msmtprc # 创建邮件配置</p>
+<p># 添加内容（以126邮箱为例）：</p>
+<p>account default</p>
+<p>host smtp.126.com</p>
+<p>port 25</p>
+<p>from <a href="mailto:&#x78;&#121;&#116;&#120;&#x39;&#x35;&#52;&#x40;&#x31;&#x32;&#x36;&#46;&#x63;&#x6f;&#x6d;">xytx954@126.com</a></p>
+<p>auth login</p>
+<p>user <a href="mailto:&#120;&#121;&#x74;&#120;&#x39;&#x35;&#52;&#64;&#49;&#50;&#x36;&#x2e;&#x63;&#x6f;&#x6d;">xytx954@126.com</a></p>
+<p>password [邮箱密码&#x2F;授权码]</p>
+<p>tls off</p>
+<p>chmod 600 &#x2F;etc&#x2F;msmtprc # 设置配置文件权限</p>
+<h3 id="3-网络接口配置"><a href="#3-网络接口配置" class="headerlink" title="3. 网络接口配置"></a>3. 网络接口配置</h3><ol>
+<li><strong>OpenWrt 管理界面</strong>：<ol>
+<li>登录 192.168.1.1，进入「网络」→「接口」</li>
+<li>ETH0 配置：协议选择「静态地址」，IP 设为10.21.51.183，网关10.21.255.254，DNS 设为校园网 DNS（如 218.95.157.33）</li>
+<li>ETH2 配置：协议选择「DHCP 服务器」，用于内网设备自动获取 IP</li>
+</ol>
+</li>
+<li><strong>防火墙规则</strong>：<ol>
+<li>确保 ETH0 接口允许出站流量（校园网认证需要访问外部服务器）</li>
+<li>关闭 ETH0 接口的入站流量过滤（避免认证服务器响应被拦截）</li>
+</ol>
+</li>
+</ol>
+<h2 id="四、优化与安全建议"><a href="#四、优化与安全建议" class="headerlink" title="四、优化与安全建议"></a>四、优化与安全建议</h2><h3 id="1-账号安全强化"><a href="#1-账号安全强化" class="headerlink" title="1. 账号安全强化"></a>1. 账号安全强化</h3><ol>
+<li><strong>密码加密存储</strong>：</li>
+</ol>
+<p>将明文密码pwd&#x3D;123@nxlg替换为加密存储，例如：</p>
+<p># 加密脚本（encrypt.sh）</p>
+<p># 存储加密后的密码：echo “123@nxlg” | base64 &gt; &#x2F;root&#x2F;pwd.enc</p>
+<p>pwd&#x3D;$(cat &#x2F;root&#x2F;pwd.enc | base64 -d) # 脚本中解密使用</p>
+<ol>
+<li><strong>账号轮换策略</strong>：</li>
+</ol>
+<p>定期更新userlist.txt中的账号，避免长期使用固定账号导致被封禁。</p>
+<h3 id="2-网络稳定性优化"><a href="#2-网络稳定性优化" class="headerlink" title="2. 网络稳定性优化"></a>2. 网络稳定性优化</h3><ol>
+<li><strong>多节点检测</strong>：</li>
+</ol>
+<p>修改 ping 检测目标为多个 IP（如校园网网关、公共 DNS），避免单一目标不可达导致误判：</p>
+<p>ping -I eth0 -c 1 -W 1 10.100.100.141 || ping -I eth0 -c 1 -W 1 8.8.8.8</p>
+<ol>
+<li><strong>智能重试次数</strong>：</li>
+</ol>
+<p>将max_attempts&#x3D;1调整为 3-5 次，增加断连后的重试频率，提升自动重连成功率。</p>
+<h3 id="3-日志与监控增强"><a href="#3-日志与监控增强" class="headerlink" title="3. 日志与监控增强"></a>3. 日志与监控增强</h3><ol>
+<li><strong>日志切割</strong>：</li>
+</ol>
+<p>添加日志切割脚本，避免单一日志文件过大：</p>
+<p># 创建log_rotate.sh</p>
+<p>mv &#x2F;root&#x2F;login.log &#x2F;root&#x2F;login_$(date +%Y%m%d).log</p>
+<p>touch &#x2F;root&#x2F;login.log</p>
+<p>chmod 666 &#x2F;root&#x2F;login.log</p>
+<p>定时任务中每周执行一次日志切割。</p>
+<ol>
+<li><strong>远程日志服务</strong>：</li>
+</ol>
+<p>将curl发送日志的 API 替换为自建日志服务器，便于长期存储与分析：</p>
+<p>curl -X POST -H “Authorization: Bearer TOKEN” –data-binary “@$log_file” <a target="_blank" rel="noopener" href="https://your-log-server.com/api/log">https://your-log-server.com/api/log</a></p>
+<h2 id="五、方案拓展与应用场景"><a href="#五、方案拓展与应用场景" class="headerlink" title="五、方案拓展与应用场景"></a>五、方案拓展与应用场景</h2><h3 id="1-多校区适配"><a href="#1-多校区适配" class="headerlink" title="1. 多校区适配"></a>1. 多校区适配</h3><p>若学校存在多个校区（如 A 区 &#x2F; B 区），可通过以下方式适配不同网络环境：</p>
+<ol>
+<li>在脚本中添加校区检测逻辑，根据 IP 段自动切换认证参数</li>
+<li>维护多组wlanuserip&#x2F;nasip参数，对应不同校区的网络标识</li>
+</ol>
+<h3 id="2-移动设备共享网络"><a href="#2-移动设备共享网络" class="headerlink" title="2. 移动设备共享网络"></a>2. 移动设备共享网络</h3><p>通过 OpenWrt 的 NAT 功能，将校园网共享给手机、平板等设备：</p>
+<ol>
+<li>ETH2 接口配置为 Wi-Fi 热点（「网络」→「无线」→「新增接口」）</li>
+<li>确保防火墙规则允许 ETH0→ETH2 的转发（「网络」→「防火墙」→「转发规则」）</li>
+</ol>
+<h3 id="3-企业-园区网络扩展"><a href="#3-企业-园区网络扩展" class="headerlink" title="3. 企业 &#x2F; 园区网络扩展"></a>3. 企业 &#x2F; 园区网络扩展</h3><p>该方案可拓展至企业或园区网络认证场景，只需修改：</p>
+<ol>
+<li>认证接口 URL 及参数（如替换为<a target="_blank" rel="noopener" href="http://portal.company.com/login%EF%BC%89">http://portal.company.com/login）</a></li>
+<li>网络检测目标 IP（如企业内网服务器）</li>
+<li>账号管理逻辑（适配企业账号格式）</li>
+</ol>
+<h2 id="六、总结"><a href="#六、总结" class="headerlink" title="六、总结"></a>六、总结</h2><p>本方案通过 OpenWrt 与 Shell 脚本的结合，实现了宁夏理工学院校园网的全自动认证与网络管理，解决了手动登录繁琐、网络断连需重启等问题。方案的核心价值在于：</p>
+<ol>
+<li><strong>自动化</strong>：无需人工干预，降低使用门槛</li>
+<li><strong>可靠性</strong>：智能重试与异常处理机制提升网络连通率</li>
+<li><strong>安全性</strong>：多账号轮询与日志监控保障账号与网络安全</li>
+</ol>
+<p>对于其他院校或企业，只需根据实际网络环境调整认证参数与网络配置，即可快速复用该方案，实现网络接入的自动化与智能化管理。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://xiaoyi954.github.io">小易同志</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://xiaoyi954.github.io/2025/06/29/%E5%AE%81%E5%A4%8F%E7%90%86%E5%B7%A5%E5%AD%A6%E9%99%A2%E6%A0%A1%E5%9B%AD%E7%BD%91%E8%87%AA%E5%8A%A8%E5%8C%96%E7%99%BB%E5%BD%95%E6%96%B9%E6%A1%88/">http://xiaoyi954.github.io/2025/06/29/%E5%AE%81%E5%A4%8F%E7%90%86%E5%B7%A5%E5%AD%A6%E9%99%A2%E6%A0%A1%E5%9B%AD%E7%BD%91%E8%87%AA%E5%8A%A8%E5%8C%96%E7%99%BB%E5%BD%95%E6%96%B9%E6%A1%88/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="http://xiaoyi954.github.io" target="_blank">小易同志 个人博客</a>！</span></div></div><div class="tag_share"><div class="post-share"><div class="social-share" data-image="/img/1.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2025/06/29/%E5%AE%81%E5%A4%8F%E7%90%86%E5%B7%A5%E6%95%99%E5%8A%A1%E7%B3%BB%E7%BB%9F%E5%BF%AB%E9%80%9F%E6%8A%A2%E8%AF%BE%E6%96%B9%E6%A1%88/" title="宁夏理工教务系统快速抢课方案"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">宁夏理工教务系统快速抢课方案</div></div><div class="info-2"><div class="info-item-1">宁夏理工学院教务系统内网登录辅助程序小易教务 V3.1 使用说明 作者：小易同学联系方式：xytx954@126.com发布日期：2024年12月 如果你懒得看下面的博文可发邮件联系博主付费代抢，小易团队代抢课4年，每次限量预约200名左右，曾创下把65人全塞进两个羽毛球班的壮举，直接班里一半的人全是我们抢上的。 一、项目简介小易教务 V3.1 是一款专为宁夏理工学院教务系统设计的内网登录辅助工具，旨在解决学生因公网延迟或访问受限而导致无法顺利登录教务系统的问题。该工具已在 2024 年 12 月 23 日与 25 日的实际抢课测试中成功帮助约 300 名学生顺利完成选课操作，验证了其实用性与稳定性。 二、项目原理本程序主要通过模拟统一门户登录，抓取认证后产生的 Cookie，进而利用该 Cookie 自动登录教务系统内网（10.100.100.141），实现免手动输入、快速稳定的预登录过程。整个流程可总结为一句话：“认证一次，用 Cookie...</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/1.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">小易同志</div><div class="author-info-description">技术上的一些碎碎念</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">2</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xiaoyi954/NXIST-JIAOWU"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">新站建立诸多不足，正在逐步完善中。</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E3%80%8A%E5%AE%81%E5%A4%8F%E7%90%86%E5%B7%A5%E5%AD%A6%E9%99%A2%E5%85%8D%E8%B4%B9%E6%A0%A1%E5%9B%AD%E7%BD%91%E8%87%AA%E5%8A%A8%E5%8C%96%E7%99%BB%E5%BD%95%E6%96%B9%E6%A1%88%EF%BC%9AOpenWrt-%E4%B8%8E-Shell-%E8%84%9A%E6%9C%AC%E5%AE%9E%E7%8E%B0%E3%80%8B"><span class="toc-number">1.</span> <span class="toc-text">《宁夏理工学院免费校园网自动化登录方案：OpenWrt 与 Shell 脚本实现》</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%96%B9%E6%A1%88%E8%83%8C%E6%99%AF%E4%B8%8E%E7%9B%AE%E6%A0%87"><span class="toc-number">1.1.</span> <span class="toc-text">一、方案背景与目标</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E6%A0%B8%E5%BF%83%E8%84%9A%E6%9C%AC%E5%8E%9F%E7%90%86%E4%B8%8E%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90"><span class="toc-number">1.2.</span> <span class="toc-text">二、核心脚本原理与源码解析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E8%84%9A%E6%9C%AC%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84"><span class="toc-number">1.2.1.</span> <span class="toc-text">1. 脚本整体架构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%85%B3%E9%94%AE%E6%A8%A1%E5%9D%97%E8%AF%A6%E8%A7%A3"><span class="toc-number">1.2.2.</span> <span class="toc-text">2. 关键模块详解</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%881%EF%BC%89%E9%94%81%E6%9C%BA%E5%88%B6%E4%B8%8E%E5%8D%95%E4%BE%8B%E6%8E%A7%E5%88%B6"><span class="toc-number">1.2.2.1.</span> <span class="toc-text">（1）锁机制与单例控制</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%882%EF%BC%89%E8%B4%A6%E5%8F%B7%E9%9A%8F%E6%9C%BA%E9%80%89%E6%8B%A9%E7%AE%97%E6%B3%95"><span class="toc-number">1.2.2.2.</span> <span class="toc-text">（2）账号随机选择算法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%883%EF%BC%89%E7%BD%91%E7%BB%9C%E7%8A%B6%E6%80%81%E6%A3%80%E6%B5%8B%E4%B8%8E%E8%B7%AF%E7%94%B1%E9%85%8D%E7%BD%AE"><span class="toc-number">1.2.2.3.</span> <span class="toc-text">（3）网络状态检测与路由配置</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%884%EF%BC%89%E6%99%BA%E8%83%BD%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E6%9C%BA%E5%88%B6"><span class="toc-number">1.2.2.4.</span> <span class="toc-text">（4）智能异常处理机制</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81OpenWrt-%E9%83%A8%E7%BD%B2%E4%B8%8E%E9%85%8D%E7%BD%AE%E6%8C%87%E5%8D%97"><span class="toc-number">1.3.</span> <span class="toc-text">三、OpenWrt 部署与配置指南</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E7%8E%AF%E5%A2%83%E5%87%86%E5%A4%87"><span class="toc-number">1.3.1.</span> <span class="toc-text">1. 环境准备</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E8%84%9A%E6%9C%AC%E9%83%A8%E7%BD%B2%E6%AD%A5%E9%AA%A4"><span class="toc-number">1.3.2.</span> <span class="toc-text">2. 脚本部署步骤</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%881%EF%BC%89%E5%88%9B%E5%BB%BA%E5%B9%B6%E9%85%8D%E7%BD%AE%E8%84%9A%E6%9C%AC"><span class="toc-number">1.3.2.1.</span> <span class="toc-text">（1）创建并配置脚本</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%882%EF%BC%89%E9%85%8D%E7%BD%AE%E5%AE%9A%E6%97%B6%E4%BB%BB%E5%8A%A1"><span class="toc-number">1.3.2.2.</span> <span class="toc-text">（2）配置定时任务</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%883%EF%BC%89%E9%82%AE%E4%BB%B6%E9%80%9A%E7%9F%A5%E9%85%8D%E7%BD%AE"><span class="toc-number">1.3.2.3.</span> <span class="toc-text">（3）邮件通知配置</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E7%BD%91%E7%BB%9C%E6%8E%A5%E5%8F%A3%E9%85%8D%E7%BD%AE"><span class="toc-number">1.3.3.</span> <span class="toc-text">3. 网络接口配置</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E4%BC%98%E5%8C%96%E4%B8%8E%E5%AE%89%E5%85%A8%E5%BB%BA%E8%AE%AE"><span class="toc-number">1.4.</span> <span class="toc-text">四、优化与安全建议</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E8%B4%A6%E5%8F%B7%E5%AE%89%E5%85%A8%E5%BC%BA%E5%8C%96"><span class="toc-number">1.4.1.</span> <span class="toc-text">1. 账号安全强化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E7%BD%91%E7%BB%9C%E7%A8%B3%E5%AE%9A%E6%80%A7%E4%BC%98%E5%8C%96"><span class="toc-number">1.4.2.</span> <span class="toc-text">2. 网络稳定性优化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E6%97%A5%E5%BF%97%E4%B8%8E%E7%9B%91%E6%8E%A7%E5%A2%9E%E5%BC%BA"><span class="toc-number">1.4.3.</span> <span class="toc-text">3. 日志与监控增强</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E6%96%B9%E6%A1%88%E6%8B%93%E5%B1%95%E4%B8%8E%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="toc-number">1.5.</span> <span class="toc-text">五、方案拓展与应用场景</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%A4%9A%E6%A0%A1%E5%8C%BA%E9%80%82%E9%85%8D"><span class="toc-number">1.5.1.</span> <span class="toc-text">1. 多校区适配</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E7%A7%BB%E5%8A%A8%E8%AE%BE%E5%A4%87%E5%85%B1%E4%BA%AB%E7%BD%91%E7%BB%9C"><span class="toc-number">1.5.2.</span> <span class="toc-text">2. 移动设备共享网络</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E4%BC%81%E4%B8%9A-%E5%9B%AD%E5%8C%BA%E7%BD%91%E7%BB%9C%E6%89%A9%E5%B1%95"><span class="toc-number">1.5.3.</span> <span class="toc-text">3. 企业 &#x2F; 园区网络扩展</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E6%80%BB%E7%BB%93"><span class="toc-number">1.6.</span> <span class="toc-text">六、总结</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/06/29/%E5%AE%81%E5%A4%8F%E7%90%86%E5%B7%A5%E5%AD%A6%E9%99%A2%E6%A0%A1%E5%9B%AD%E7%BD%91%E8%87%AA%E5%8A%A8%E5%8C%96%E7%99%BB%E5%BD%95%E6%96%B9%E6%A1%88/" title="宁夏理工学院校园网自动化登录方案">宁夏理工学院校园网自动化登录方案</a><time datetime="2025-06-29T13:37:37.000Z" title="发表于 2025-06-29 21:37:37">2025-06-29</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/06/29/%E5%AE%81%E5%A4%8F%E7%90%86%E5%B7%A5%E6%95%99%E5%8A%A1%E7%B3%BB%E7%BB%9F%E5%BF%AB%E9%80%9F%E6%8A%A2%E8%AF%BE%E6%96%B9%E6%A1%88/" title="宁夏理工教务系统快速抢课方案">宁夏理工教务系统快速抢课方案</a><time datetime="2025-06-29T09:09:45.926Z" title="发表于 2025-06-29 17:09:45">2025-06-29</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/2.png);"><div id="footer-wrap"><div class="copyright">&copy;2019 - 2025 By 小易同志</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.3.5</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
